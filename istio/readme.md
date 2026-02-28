@@ -27,7 +27,7 @@ SM реализуется с помощью паттерна сайдкара
 ![Istiod.png](../images/istio/Istiod.png)
 
 ### Istio features:
-- Service discovery. Istion автоматически регистрирует новые создаваемые поды в кластере.
+- Service discovery. Istio автоматически регистрирует новые создаваемые поды в кластере.
 - Security - certificate management. Позволяет выставлять безопасное mTls взаимодействие между сервисами.
     ![citadel.png](../images/istio/citadel.png)
 - Metrics and tracing. Собирает метрики от `envoy-proxy`, которые в свою очередь могут получать их например от `prometheus`
@@ -36,3 +36,30 @@ SM реализуется с помощью паттерна сайдкара
 ### Istio gateway
 `Istio ingress gateway` это входная точка в кластер k8s
 ![ingress_gateway.png](../images/istio/ingress_gateway.png)
+Нужен для проброса входящих соединении в k8s на внутренние сервисы
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dashboard-ingress
+  namespace: kubernetes-dashboard
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+spec:
+#  - routing rules
+  rules: 
+#    - доменное имя хоста, с к-го будет роутится запросы на internalService
+  - host: dashboard.com 
+#    - протокол, по которому данные будут маршрутизироваться на internalService(а не приниматься от внешних клиентов на доменном адресе)
+    http: 
+      paths:
+      - path: /
+        pathType: Exact  
+        backend:
+          service:
+            name: kubernetes-dashboard - имя internalService 
+            port: 
+              number: 80  # порт, на котором работает внутренний сервис
+```
+
+Для ingress требуется имплементация. Это ingressController. Поднимается в качестве отдельного пода. Т.е у моего сервиса описан ingress, а ingressController уже управляем правилами со всех ingres-ов сервисов. IngressController - это входная точка в кластер k8s.
