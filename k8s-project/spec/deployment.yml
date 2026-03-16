@@ -1,0 +1,167 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rest-service
+  namespace: default
+  labels:
+    app: rest-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rest-service
+  template:
+    metadata:
+      labels:
+        app: rest-service
+    spec:
+      containers:
+        - name: rest-service
+          image: evggen0904/rest-service:2.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9080
+              name: http
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+#         чтобы не оверрайдить все настройки необходимо указать отдельный профиль для спринга k8s и передать его настройки
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: k8s
+            - name: DB_SERVICE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rest-service-secret
+                  key: DB_SERVICE_PASSWORD
+          livenessProbe:
+            httpGet:
+              path: /rest-service/actuator/health/liveness
+              port: 9080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /rest-service/actuator/health/readiness
+              port: 9080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: rest-service-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rest-service
+spec:
+  selector:
+    app: rest-service
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 9080
+      targetPort: 9080
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rest-service-config
+  namespace: default
+data:
+  application-k8s.yaml: |
+    db-service:
+      base-path: http://db-service:9081/db-service
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rest-service-secret
+type: Opaque
+stringData:
+  DB_SERVICE_PASSWORD: password
+
+
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-service
+  namespace: default
+  labels:
+    app: db-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db-service
+  template:
+    metadata:
+      labels:
+        app: db-service
+    spec:
+      containers:
+        - name: db-service
+          image: evggen0904/db-service:2.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: WEB_SECURITY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-service-secret
+                  key: WEB_SECURITY_PASSWORD
+          livenessProbe:
+            httpGet:
+              path: /db-service/actuator/health/liveness
+              port: 9081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /db-service/actuator/health/readiness
+              port: 9081
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          ports:
+            - containerPort: 9081
+              name: http
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+spec:
+  selector:
+    app: db-service
+  ports:
+    - protocol: TCP
+      port: 9081
+      targetPort: 9081
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-service-secret
+type: Opaque
+stringData:
+  WEB_SECURITY_PASSWORD: password

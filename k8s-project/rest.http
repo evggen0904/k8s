@@ -1,0 +1,23 @@
+GET http://{{rest-service}}/rest-service/actuator/health
+
+###
+GET http://{{rest-service}}/rest-service/actuator
+
+###
+GET http://{{rest-service}}/rest-service/actuator/health/liveness
+
+###
+GET http://{{rest-service}}/rest-service/actuator/health/readiness
+
+### getInner
+GET http://{{rest-service}}/rest-service/inner/test
+
+###
+GET http://{{rest-service}}/rest-service/db/test
+
+###
+GET http://{{db-service}}/db-service/actuator/health
+
+###
+GET http://{{db-service}}/db-service/data
+Authorization: Basic ZGJVc2VyOnRlc3Q=

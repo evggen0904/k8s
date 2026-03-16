@@ -1,0 +1,18 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+logging:
+  level:
+    web: debug
+    root: info
+
+server:
+  port: 9081
+  servlet:
+    context-path: /db-service
+
+web-security:
+  user-name: dbUser
+  password: test

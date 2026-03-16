@@ -1,0 +1,18 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+
+server:
+  port: 9080
+  servlet:
+    context-path: /rest-service
+
+db-service:
+  base-path: http://localhost:9081/db-service
+  user-name: dbUser
+  password: test
+  connection-timeout: 5
+  read-timeout: 10
+  write-timeout: 5
