@@ -57,3 +57,15 @@ k8s-web-to-nginx-55d9c6bbbb-2bblj   2/2     Running   0          38s
 k8s-web-to-nginx-55d9c6bbbb-qmh77   2/2     Running   0          38s
 k8s-web-to-nginx-55d9c6bbbb-xqhlw   2/2     Running   0          38s
 ```
+
+Далее необходимо создать gateway и virtualService. Например, для моего сервиса работающего в кубере на порту 9080 [ingress.yml](../k8s-project/spec/ingress.yml)
+
+Чтобы ingress стал доступен снаружи миникуба нужно выполнить portForward. Порт 8080 с локальной машины пробрасывает на 80 порт в кубере
+```shell
+kubectl port-forward svc/istio-ingressgateway -n istio-system 8080:80
+```
+
+После этого сервис при правильной настройке проксирования будет доступен при обращении через 8080 порт на localhost
+```shell
+curl -v http://localhost:8080/rest-service/db/test
+```

@@ -1,0 +1,53 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: my-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*"
+        - myapp.com
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: rest-vs
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - my-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /rest-service
+      route:
+        - destination:
+            host: rest-service
+            port:
+              number: 9080
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: db-vs
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - my-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /db-service
+      route:
+        - destination:
+            host: db-service
+            port:
+              number: 9081
