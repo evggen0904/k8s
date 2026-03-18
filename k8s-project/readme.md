@@ -2,8 +2,8 @@
 Сервисы взаимодействуют друг с другом через rest с использование basic авторизации.
 
 ### Для запуска в кубере (minikube): 
-- Настроить сам кластер [Установка и запуск minikube.md](../../%D0%A3%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0%20%D0%B8%20%D0%B7%D0%B0%D0%BF%D1%83%D1%81%D0%BA%20minikube.md)
-- Развернуть деплоймент [deployment.yml](../spec/deployment.yml) `kubectl apply -f deployment.yml`
+- Настроить сам кластер [Minikube_config.md](../Minikube_config.md)
+- Развернуть деплоймент [deployment.yml](spec/deployment.yml)  `kubectl apply -f deployment.yml`
 - После этого при открытии туннуле `minikube tunnel` можно постучаться в кластер до сервиса через его LoadBalancer. эндпоинты
     ```shell
     ### Обращение напрямую к rest-service
@@ -13,7 +13,7 @@
     ```
   
 ### Настройка ingress
-- Для настройки istioIngress использовать [istio_in_minikube.md](../../istio/istio_in_minikube.md)
+- Для настройки istioIngress использовать [istio_in_minikube.md](../istio/istio_in_minikube.md)
 - Развернуть gateway, virtualService istio `kubectl apply -f ingress.yml`
 - Включить форвардинг портов с локальной машины до кластера `port-forward svc/istio-ingressgateway -n istio-system 8080:80`
 - Теперь сервис должен быть доступен на порту 8080
