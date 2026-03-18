@@ -63,3 +63,44 @@ spec:
 ```
 
 Для ingress требуется имплементация. Это ingressController. Поднимается в качестве отдельного пода. Т.е у моего сервиса описан ingress, а ingressController уже управляем правилами со всех ingres-ов сервисов. IngressController - это входная точка в кластер k8s.
+
+
+### В Istio ingress flow:
+
+    Client
+    ↓
+    Istio Gateway (Envoy listener)
+    ↓
+    VirtualHost matching (HOST MATCHING ← здесь)
+    ↓
+    Route matching (PATH)
+    ↓
+    Cluster (service)
+👉 сначала домен (Host)
+👉 потом path
+
+### Алгоритм matching в Envoy
+
+Envoy делает:
+
+1️⃣ Exact match
+
+`rest.local`
+
+2️⃣ Wildcard suffix match
+
+`*.local`
+
+3️⃣ Wildcard prefix match
+
+`api.*`
+
+4️⃣ Catch-all
+
+`*`
+
+Приоритет:
+
+`Exact > Wildcard > Catch-all`
+
+Это критически важно.

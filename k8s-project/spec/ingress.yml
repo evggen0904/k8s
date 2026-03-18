@@ -12,7 +12,16 @@ spec:
         protocol: HTTP
       hosts:
         - "*"
-        - myapp.com
+        - myapp.dev
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: myapp-tls-cert   # Имя секрета, который мы создали
+      hosts:
+        - myapp.dev
 ---
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
