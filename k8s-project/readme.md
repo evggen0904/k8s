@@ -163,4 +163,24 @@
     evggorainov@MacBook-Air-Evgenij jetbra % curl -k https://myapp.dev/rest-service/db/test 
     {"id":"8833bee1-eb7d-4a47-ad3f-5be9de73a870","data":"Hello from db service"}%  
     ```
-9) 
+
+### Если не работают запросы через istio после того, как мак перешел в режим ожидания
+Проблемы с minikube (очень частое)
+
+Minikube иногда:
+
+- роняет DNS
+- меняет IP сервисов
+- ломает tunnel
+
+👉 особенно после:
+
+- sleep ноутбука
+- restart minikube
+- смены сети
+
+Скорее всего поможет перезагрузка конфигурации istio
+```shell
+kubectl rollout restart deployment istio-ingressgateway -n istio-system
+kubectl rollout restart deployment istiod -n istio-system
+```
