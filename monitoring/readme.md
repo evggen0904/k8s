@@ -139,3 +139,30 @@
 4) Добавить домен в hosts 127.0.0.1 grafana.local
 5) После этого будет доступ через 80 порт истио http://grafana.local:80/dashboards
 6) Выполнить теже настройки для prometheus. Будет доступен тут http://prometheus.local/query
+
+### Добавление метрик своих сервисов
+1) У сервиса должен быть открыт endpoint actuator с метриками для prometheus. В моем случае два сервиса
+   ```shell
+   GET http://{{db-service}}/db-service/actuator/health
+   GET http://{{rest-service}}/rest-service/actuator
+   ```
+2) Создать компонент `ServiceMonitor` в котором необходимо связать существующие сервисы через label c helm релизом
+   ```yaml
+   apiVersion: monitoring.coreos.com/v1
+   kind: ServiceMonitor
+   metadata:
+     name: db-service-monitor
+     labels:
+       release: monitoring   # <-- ДОЛЖЕН совпадать с helm release kube-prometheus-stack
+   spec:
+     selector:
+       matchLabels:
+         app: db-service # my app label
+     endpoints:
+       - port: http
+         path: /db-service/actuator/prometheus
+         interval: 2s
+   ```
+3) Узнать имя релиза через `helm ls` либо `kubectl get prometheus -A -o yaml | grep serviceMonitorSelector -A 5`
+4) Применить конфигурацию в кластере k8s `kubectl apply -f service-monitor.yml`
+5) После этого метрики должны появиться в targets prometheus.

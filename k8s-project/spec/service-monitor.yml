@@ -1,0 +1,31 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: db-service-monitor
+  labels:
+    release: monitoring   # <-- ДОЛЖЕН совпадать с helm release kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: db-service
+  endpoints:
+    - port: http
+      path: /db-service/actuator/prometheus
+      interval: 2s
+
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: rest-service-monitor
+  labels:
+    release: monitoring   # <-- ДОЛЖЕН совпадать с helm release kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: rest-service
+  endpoints:
+    - port: http
+      path: /rest-service/actuator/prometheus
+      interval: 2s
