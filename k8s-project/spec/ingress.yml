@@ -11,8 +11,10 @@ spec:
         name: http
         protocol: HTTP
       hosts:
-#        - "*"
+        - "*"
         - myapp.dev
+        - grafana.local
+        - prometheus.local
     - port:
         number: 443
         name: https
@@ -29,7 +31,7 @@ metadata:
   name: rest-vs
 spec:
   hosts:
-    - "*"
+    - myapp.dev
   gateways:
     - my-gateway
   http:
@@ -48,7 +50,7 @@ metadata:
   name: db-vs
 spec:
   hosts:
-    - "*"
+    - myapp.dev
   gateways:
     - my-gateway
   http:
@@ -60,3 +62,61 @@ spec:
             host: db-service
             port:
               number: 9081
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: grafana-vs
+spec:
+  hosts:
+    - grafana.local
+  gateways:
+    - my-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: monitoring-grafana
+            port:
+              number: 80
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: prometheus-vs
+spec:
+  hosts:
+    - prometheus.local
+  gateways:
+    - my-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: monitoring-kube-prometheus-prometheus
+            port:
+              number: 9090
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: grafana-dr
+spec:
+  host: monitoring-grafana
+  trafficPolicy:
+    tls:
+      mode: DISABLE
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: prometheus-dr
+spec:
+  host: monitoring-kube-prometheus-prometheus
+  trafficPolicy:
+    tls:
+      mode: DISABLE

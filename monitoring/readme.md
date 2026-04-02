@@ -71,3 +71,71 @@
     type: Opaque
     ```
 6) И потом декодировать дефолтные ключи для `admin-user` и `admin-password`
+
+### Доступ через абстракцию сервиса:
+1) Смотрим какой порт случает сервис
+   ```shell
+   evggorainov@MacBook-Air-Evgenij spec % k get svc | grep monitoring-grafana
+   monitoring-grafana                        ClusterIP      10.111.121.70    <none>        80/TCP                       5d21h
+   ```
+2) Открываем порт непосредственно через сервис
+   ```shell
+   kubectl port-forward svc/monitoring-grafana 8080:80
+   ```
+3) После этого сервис доступен на `http://localhost:8080/dashboards`
+
+### Доступ через istio
+1) Необходимо создать virtualService для проксирования запроса
+   ```yaml
+   apiVersion: networking.istio.io/v1beta1
+   kind: VirtualService
+   metadata:
+     name: grafana-vs
+   spec:
+     hosts:
+       - grafana.local
+     gateways:
+       - my-gateway
+     http:
+       - match:
+           - uri:
+               prefix: /
+         route:
+           - destination:
+               host: monitoring-grafana
+               port:
+                 number: 80
+   ```
+2) Добавить host в gateway
+   ```yaml
+   kind: Gateway
+   metadata:
+     name: my-gateway
+   spec:
+     selector:
+       istio: ingressgateway
+     servers:
+       - port:
+           number: 80
+           name: http
+           protocol: HTTP
+         hosts:
+           - myapp.dev
+           - grafana.local
+           - prometheus.local
+   ```
+3) Так как по умолчанию графана стартует без истио сайдкара, графана не будет находиться в mesh сети и траффик будет перенаправляться через tls. Необходимо его отключить
+   ```yaml
+   apiVersion: networking.istio.io/v1beta1
+   kind: DestinationRule
+   metadata:
+     name: grafana-dr
+   spec:
+     host: monitoring-grafana
+     trafficPolicy:
+       tls:
+         mode: DISABLE
+   ```
+4) Добавить домен в hosts 127.0.0.1 grafana.local
+5) После этого будет доступ через 80 порт истио http://grafana.local:80/dashboards
+6) Выполнить теже настройки для prometheus. Будет доступен тут http://prometheus.local/query
